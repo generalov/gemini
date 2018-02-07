@@ -5,6 +5,8 @@ var SuiteBuilder = require('lib/tests-api/suite-builder'),
     ActionsBuilder = require('lib/tests-api/actions-builder'),
     find = require('lib/tests-api/find-func').find;
 
+const {noop} = require('lodash');
+
 describe('tests-api/suite-builder', function() {
     var sandbox = sinon.sandbox.create(),
         suite,
@@ -264,100 +266,111 @@ describe('tests-api/suite-builder', function() {
         });
     });
 
-    describe('capture', function() {
-        beforeEach(function() {
-            suiteBuilder
-                .setUrl('/path')
-                .setCaptureElements('.element');
-        });
+    [
+        {method: 'capture', viewportOnly: false},
+        {method: 'captureViewport', viewportOnly: true}
+    ].forEach((value) => {
+        const {method, viewportOnly} = value;
 
-        it('should throw if first argument is not passed', function() {
-            assert.throws(function() {
-                suiteBuilder.capture({not: 'a string'});
-            }, TypeError);
-        });
-
-        it('should throw if second argument is not a function', function() {
-            assert.throws(function() {
-                suiteBuilder.capture('state', 'make me a sandwich');
-            }, TypeError);
-        });
-
-        it('should not throw if second argument is absent', function() {
-            assert.doesNotThrow(function() {
-                suiteBuilder.capture('state');
-            });
-        });
-
-        it('should create named state', function() {
-            suiteBuilder.capture('state');
-            assert.equal(suite.states[0].name, 'state');
-        });
-
-        it('should throw if state with such name already exists', function() {
-            assert.throws(function() {
-                suiteBuilder.capture('state');
-                suiteBuilder.capture('state');
-            });
-        });
-
-        it('should allow to have multiple states of different names', function() {
-            suiteBuilder
-                .capture('state 1')
-                .capture('state 2');
-
-            assert.equal(suite.states[0].name, 'state 1');
-            assert.equal(suite.states[1].name, 'state 2');
-        });
-
-        it('should make new state reference the suite', function() {
-            suiteBuilder.capture('state');
-            assert.equal(suite.states[0].suite, suite);
-        });
-
-        it('should call passed callback with actions builder and find', function() {
-            var cb = sinon.stub();
-
-            suiteBuilder.capture('state', cb);
-
-            assert.calledOnce(cb);
-            assert.calledWith(cb, sinon.match.instanceOf(ActionsBuilder), find);
-        });
-
-        it('should call passed callback with suite context', function() {
-            var cb = sinon.stub();
-
-            suiteBuilder.capture('state', cb);
-
-            assert.equal(
-                cb.thisValues[0],
-                suite.context
-            );
-        });
-
-        it('should set `actions` property', function() {
-            sandbox.stub(ActionsBuilder, 'create').returnsArg(0);
-
-            suiteBuilder.capture('state', function(actions) {
-                actions.push(1, 2, 3);
+        describe(`${method}`, () => {
+            beforeEach(() => {
+                suiteBuilder
+                    .setUrl('/path')
+                    .setCaptureElements('.element');
             });
 
-            assert.deepEqual([1, 2, 3], suite.states[0].actions);
-        });
+            it('should throw if first argument is not passed', () => {
+                assert.throws(() => {
+                    suiteBuilder[method]({not: 'a string'});
+                }, TypeError);
+            });
 
-        it('should allow to set tolerance', function() {
-            suiteBuilder.capture('state', {tolerance: 25}, function() {});
-            assert.equal(suite.states[0].tolerance, 25);
-        });
+            it('should throw if second argument is not a function', () => {
+                assert.throws(() => {
+                    suiteBuilder[method]('state', 'make me a sandwich');
+                }, TypeError);
+            });
 
-        it('should throw if tolerance is not a number', function() {
-            assert.throws(function() {
-                suiteBuilder.capture('state', {tolerance: 'so much'}, function() {});
-            }, TypeError);
-        });
+            it('should not throw if second argument is absent', () => {
+                assert.doesNotThrow(() => {
+                    suiteBuilder[method]('state');
+                });
+            });
 
-        it('should be chainable', function() {
-            assert.equal(suiteBuilder.capture('state'), suiteBuilder);
+            it('should create named state', () => {
+                suiteBuilder[method]('state');
+                assert.equal(suite.states[0].name, 'state');
+            });
+
+            it('should throw if state with such name already exists', () => {
+                assert.throws(() => {
+                    suiteBuilder[method]('state');
+                    suiteBuilder[method]('state');
+                });
+            });
+
+            it('should allow to have multiple states of different names', () => {
+                suiteBuilder[method]('state 1')[method]('state 2');
+
+                assert.equal(suite.states[0].name, 'state 1');
+                assert.equal(suite.states[1].name, 'state 2');
+            });
+
+            it('should make new state reference the suite', () => {
+                suiteBuilder[method]('state');
+                assert.equal(suite.states[0].suite, suite);
+            });
+
+            it('should call passed callback with actions builder and find', () => {
+                const cb = sinon.stub();
+
+                suiteBuilder[method]('state', cb);
+
+                assert.calledOnce(cb);
+                assert.calledWith(cb, sinon.match.instanceOf(ActionsBuilder), find);
+            });
+
+            it('should call passed callback with suite context', () => {
+                const cb = sinon.stub();
+
+                suiteBuilder[method]('state', cb);
+
+                assert.equal(
+                    cb.thisValues[0],
+                    suite.context
+                );
+            });
+
+            it('should set `actions` property', () => {
+                sandbox.stub(ActionsBuilder, 'create').returnsArg(0);
+
+                suiteBuilder[method]('state', function(actions) {
+                    actions.push(1, 2, 3);
+                });
+
+                assert.deepEqual([1, 2, 3], suite.states[0].actions);
+            });
+
+            it('should allow to set tolerance', () => {
+                suiteBuilder[method]('state', {tolerance: 25}, noop);
+                assert.equal(suite.states[0].tolerance, 25);
+            });
+
+            it('should throw if tolerance is not a number', () => {
+                assert.throws(() => {
+                    suiteBuilder[method]('state', {tolerance: 'so much'}, noop);
+                }, TypeError);
+            });
+
+            it(`should set viewportOnly of state to ${viewportOnly}`, () => {
+                suiteBuilder[method]('state', {}, noop);
+
+                assert.equal(suite.states[0].viewportOnly, viewportOnly);
+            });
+
+            it('should be chainable', () => {
+                assert.equal(suiteBuilder[method]('state'), suiteBuilder);
+            });
         });
     });
 
