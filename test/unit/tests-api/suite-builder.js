@@ -377,7 +377,7 @@ describe('tests-api/suite-builder', () => {
         it('should throw if argument is an object', () => {
             assert.throws(() => {
                 suiteBuilder.skip({browserName: 'name', version: '123', id: 'browser'});
-            }, Error);
+            }, TypeError);
         });
 
         it('should mark suite as skipped', () => {
@@ -453,7 +453,7 @@ describe('tests-api/suite-builder', () => {
         it('should throw if argument is an object', () => {
             assert.throws(() => {
                 suiteBuilder.skip.notIn({browserName: 'name', version: '123', id: 'browser'});
-            }, Error);
+            }, TypeError);
         });
 
         it('should not mark suite as skipped', () => {
