@@ -4,6 +4,8 @@ const SuiteBuilder = require('lib/tests-api/suite-builder');
 const Suite = require('lib/suite');
 const ActionsBuilder = require('lib/tests-api/actions-builder');
 const {find} = require('lib/tests-api/find-func');
+const SkipBuilder = require('lib/tests-api/skip/skip-builder');
+const OnlyBuilder = require('lib/tests-api/skip/only-builder');
 
 describe('tests-api/suite-builder', () => {
     const sandbox = sinon.sandbox.create();
@@ -363,416 +365,71 @@ describe('tests-api/suite-builder', () => {
         });
     });
 
-    describe('skip.in', () => {
-        const errorMessage = 'Browsers must be array of strings or RegExp objects';
-
-        it('should throw if argument is not a string nor RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.in(0);
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if argument is array with non-string or non-RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.in([false]);
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if argument is an object', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.in({browserName: 'name', version: '123', id: 'browser'});
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if no argument', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.in();
-            }, TypeError, errorMessage);
-        });
-
-        it('should accept skipped browser string id', () => {
-            suiteBuilder.skip.in('opera');
-
-            assert.equal(suite.skipped.length, 1);
-            assert.isTrue(suite.skipped[0].matches('opera'));
-            assert.isFalse(suite.skipped[0].matches('firefox'));
-        });
-
-        it('should accept skipped browser RegExp', () => {
-            suiteBuilder.skip.in(/ie1.*/);
-
-            assert.isTrue(suite.skipped[0].matches('ie11'));
-            assert.isFalse(suite.skipped[0].matches('ie8'));
-        });
-
-        it('should accept array of string ids and RegExp\'s', () => {
-            suiteBuilder.skip.in([
-                'ie11',
-                /firefox/
-            ]);
-
-            assert.isTrue(suite.skipped[0].matches('ie11'));
-            assert.isTrue(suite.skipped[0].matches('firefox33'));
-            assert.isFalse(suite.skipped[0].matches('chrome'));
-        });
-
-        it('should skip nothing if argument is an empty array', () => {
-            suiteBuilder.skip.in([]);
-
-            assert.isFalse(suite.shouldSkip('any_borwser'));
-        });
-
-        it('should accept comments', () => {
-            suiteBuilder.skip.in('chrome', 'comment');
-
-            assert.isTrue(suite.shouldSkip('chrome'));
-            assert.equal(suite.skipComment, 'comment');
-        });
-
-        it('should chain skip methods', () => {
-            suiteBuilder.skip.in('ie11')
-                .skip.in(/firefox/);
-
-            assert.isTrue(suite.shouldSkip('ie11'));
-            assert.isTrue(suite.shouldSkip('firefox33'));
-            assert.isFalse(suite.shouldSkip('chrome'));
-        });
-    });
-
-    describe('skip', () => {
-        beforeEach(() => {
-            sandbox.spy(suiteBuilder.skip, 'in');
-        });
-
-        it('should call skip.in method', () => {
-            suiteBuilder.skip(['someArg'], 'comment');
-
-            assert.calledWith(suiteBuilder.skip.in, ['someArg'], 'comment');
-        });
-
-        describe('falsey values', () => {
-            const skipAllTest = (arg, argDescription = arg) => {
-                return it(`should skip all if argument is ${argDescription}`, () => {
-                    suiteBuilder.skip(arg);
-
-                    assert.calledWith(suiteBuilder.skip.in, /.*/);
-                });
-            };
-
-            skipAllTest(undefined);
-            skipAllTest(false);
-            skipAllTest(0);
-            skipAllTest(null);
-            skipAllTest('', 'empty string');
-        });
-    });
-
-    describe('skip.notIn', () => {
-        const errorMessage = 'Browsers must be array of strings or RegExp objects';
-
-        it('should throw if argument is not a string nor RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.notIn(0);
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if argument is array with non-string or non-RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.notIn([false]);
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if argument is an object', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.notIn({browserName: 'name', version: '123', id: 'browser'});
-            }, TypeError, errorMessage);
-        });
-
-        it('should throw if no argument', () => {
-            assert.throws(() => {
-                suiteBuilder.skip.in();
-            }, TypeError, errorMessage);
-        });
-
-        it('should skip all browsers except string id', () => {
-            suiteBuilder.skip.notIn('opera');
-
-            assert.equal(suite.skipped.length, 1);
-            assert.isFalse(suite.skipped[0].matches('opera'));
-            assert.isTrue(suite.skipped[0].matches('firefox'));
-        });
-
-        it('should skip all browsers except RegExp', () => {
-            suiteBuilder.skip.notIn(/ie1.*/);
-
-            assert.isFalse(suite.skipped[0].matches('ie11'));
-            assert.isTrue(suite.skipped[0].matches('ie8'));
-        });
-
-        it('should accept array of string ids and RegExp\'s', () => {
-            suiteBuilder.skip.notIn([
-                'ie11',
-                /firefox/
-            ]);
-
-            assert.isTrue(suite.skipped[0].matches('chrome'));
-            assert.isFalse(suite.skipped[0].matches('ie11'));
-            assert.isFalse(suite.skipped[0].matches('firefox11'));
-        });
-
-        it('should accept comments', () => {
-            suiteBuilder.skip.notIn('chrome', 'comment');
-
-            assert.isTrue(suite.shouldSkip('firefox'));
-            assert.equal(suite.skipComment, 'comment');
-        });
-
-        it('should chain skip.notIn methods', () => {
-            suiteBuilder.skip.notIn('ie11', 'not in ie11')
-                .skip.notIn(/firefox/, 'not in firefox');
-
-            assert.isTrue(suite.shouldSkip('firefox33'));
-            assert.equal(suite.skipComment, 'not in ie11');
-            assert.isTrue(suite.shouldSkip('ie11'));
-            assert.equal(suite.skipComment, 'not in firefox');
-        });
-    });
-
-    describe('only.in', () => {
-        let rootSuite;
-        const errorMessage = 'Browsers must be array of strings or RegExp objects';
+    describe('SkipBuilder API', () => {
+        let suite;
+        let skipBuilder;
+        let suiteBuilder;
 
         beforeEach(() => {
-            rootSuite = Suite.create('');
-            suite = Suite.create('some-suite', rootSuite);
+            suite = Suite.create('');
+
+            skipBuilder = new SkipBuilder(suite);
+            sandbox.stub(SkipBuilder, 'create').returns(skipBuilder);
+            sandbox.spy(skipBuilder, 'buildAPI');
+
             suiteBuilder = new SuiteBuilder(suite);
         });
 
-        it('should throw without an argument', () => {
-            assert.throws(() => {
-                suiteBuilder.only.in();
-            }, TypeError, errorMessage);
+        it('should call SkipBuilder\'s .buildAPI method', () => {
+            assert.calledOnce(skipBuilder.buildAPI);
         });
 
-        it('should throw if an argument is not a string or RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.only.in(0);
-            }, TypeError, errorMessage);
-        });
+        it('should extend SkipBuilder API\'s methods', () => {
+            const api = skipBuilder.buildAPI.returnValues[0];
 
-        it('should throw if argument is an array of non-strings or non-RegExps', () => {
-            assert.throws(() => {
-                suiteBuilder.only.in([false]);
-            }, TypeError, errorMessage);
-        });
-
-        it('should remove all browsers if argument is an empty array', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.in([]);
-
-            assert.deepEqual(suite.browsers, []);
-        });
-
-        it('should filter suite browsers by a string', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.in('chrome');
-
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
-
-        it('should filter suite browsers by a RegExp', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.in(/ie.+/);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
-
-        it('should filter suite browsers by an array of strings', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.in(['chrome']);
-
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
-
-        it('should filter suite browsers by an array of RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.in([/ie.+/]);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
-
-        it('should filter suite browsers by an array of strings and RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.in([/ie.+/, 'chrome']);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-        });
-
-        it('should not set a browser for a suite if it is not specified in a root one', () => {
-            rootSuite.browsers = ['opera'];
-
-            suiteBuilder.only.in('chrome');
-
-            assert.deepEqual(suite.browsers, []);
+            assert.equal(suiteBuilder.skip, api.skip);
+            assert.equal(suiteBuilder.skip.in, api.skip.in);
+            assert.equal(suiteBuilder.skip.notIn, api.skip.notIn);
         });
 
         it('should be chainable', () => {
-            assert.equal(suiteBuilder.only.in([]), suiteBuilder);
-        });
-
-        it('should filter browsers in all children suites', () => {
-            const firstChild = Suite.create('firstChild', suite);
-            const secondChild = Suite.create('secondChild', suite);
-
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.in([/ie.+/, 'chrome']);
-            new SuiteBuilder(firstChild).only.in(/ie.+/);
-            new SuiteBuilder(secondChild).only.in('chrome');
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-            assert.deepEqual(firstChild.browsers, ['ie8', 'ie9']);
-            assert.deepEqual(secondChild.browsers, ['chrome']);
-        });
-
-        it('should pass filtered browsers from a parent suite to a child one', () => {
-            const childSuite = Suite.create('child', suite);
-
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.in('chrome');
-
-            assert.deepEqual(childSuite.browsers, ['chrome']);
+            assert.equal(suiteBuilder.skip('bro'), suiteBuilder);
+            assert.equal(suiteBuilder.skip.in('bro'), suiteBuilder);
+            assert.equal(suiteBuilder.skip.notIn('bro'), suiteBuilder);
         });
     });
 
-    describe('browsers', () => {
-        it('should call only.in method', () => {
-            sandbox.spy(suiteBuilder.only, 'in');
-
-            suiteBuilder.browsers('id1', /reg1/);
-
-            assert.calledWith(suiteBuilder.only.in, 'id1', /reg1/);
-        });
-    });
-
-    describe('only.notIn', () => {
-        let rootSuite;
-        const errorMessage = 'Browsers must be array of strings or RegExp objects';
+    describe('OnlyBuilder API', () => {
+        let suite;
+        let onlyBuilder;
+        let suiteBuilder;
 
         beforeEach(() => {
-            rootSuite = Suite.create('');
-            suite = Suite.create('some-suite', rootSuite);
+            suite = Suite.create('');
+
+            onlyBuilder = new OnlyBuilder(suite);
+            sandbox.stub(OnlyBuilder, 'create').returns(onlyBuilder);
+            sandbox.spy(onlyBuilder, 'buildAPI');
+
             suiteBuilder = new SuiteBuilder(suite);
         });
 
-        it('should throw without an argument', () => {
-            assert.throws(() => {
-                suiteBuilder.only.notIn();
-            }, TypeError, errorMessage);
+        it('should call OnlyBuilder\'s .buildAPI method', () => {
+            assert.calledOnce(onlyBuilder.buildAPI);
         });
 
-        it('should throw if an argument is not a string or RegExp', () => {
-            assert.throws(() => {
-                suiteBuilder.only.notIn(0);
-            }, TypeError, errorMessage);
-        });
+        it('should extend OnlyBuilder API\'s methods', () => {
+            const api = onlyBuilder.buildAPI.returnValues[0];
 
-        it('should throw if an argument is an array of non-strings or non-RegExps', () => {
-            assert.throws(() => {
-                suiteBuilder.only.notIn([false]);
-            }, TypeError, errorMessage);
-        });
-
-        it('should do nothing if argument is an empty array', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.notIn([]);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-        });
-
-        it('should filter suite browsers by a string', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.notIn('chrome');
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
-
-        it('should filter suite browsers by a RegExp', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.notIn(/ie.+/);
-
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
-
-        it('should filter suite browsers by an array of strings', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.notIn(['chrome']);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
-
-        it('should filter suite browsers by an array of RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            suiteBuilder.only.notIn([/ie.+/]);
-
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
-
-        it('should filter suite browsers by an array of strings and RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.notIn([/ie.+/, 'chrome']);
-
-            assert.deepEqual(suite.browsers, ['opera']);
-        });
-
-        it('should not set a browser for a suite if all browsers are excluded', () => {
-            rootSuite.browsers = ['opera'];
-
-            suiteBuilder.only.notIn('opera');
-
-            assert.deepEqual(suite.browsers, []);
+            assert.equal(suiteBuilder.browsers, api.browsers);
+            assert.equal(suiteBuilder.only.in, api.only.in);
+            assert.equal(suiteBuilder.only.notIn, api.only.notIn);
         });
 
         it('should be chainable', () => {
-            assert.equal(suiteBuilder.only.notIn(['cant use empty array']), suiteBuilder);
-        });
-
-        it('should filter browsers in all children suites', () => {
-            const firstChild = Suite.create('firstChild', suite);
-            const secondChild = Suite.create('secondChild', suite);
-
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.notIn(['opera']);
-            new SuiteBuilder(firstChild).only.notIn(/ie.+/);
-            new SuiteBuilder(secondChild).only.notIn('chrome');
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-            assert.deepEqual(firstChild.browsers, ['chrome']);
-            assert.deepEqual(secondChild.browsers, ['ie8', 'ie9']);
-        });
-
-        it('should pass filtered browsers from a parent suite to a child one', () => {
-            const childSuite = Suite.create('child', suite);
-
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            suiteBuilder.only.notIn('chrome');
-
-            assert.deepEqual(childSuite.browsers, ['ie8', 'ie9', 'opera']);
+            assert.equal(suiteBuilder.browsers('bro'), suiteBuilder);
+            assert.equal(suiteBuilder.only.in('bro'), suiteBuilder);
+            assert.equal(suiteBuilder.only.notIn('bro'), suiteBuilder);
         });
     });
 });
