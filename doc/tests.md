@@ -142,7 +142,8 @@ are not available in some browsers yet.
 
   - `skip.in(/some RegExp/)` — browser with `id` which matches `/some RegExp/`;
 
-  - `skip.in(/some RegExp/, comment)` — browser with `id` which matches `/some RegExp/` and show `comment` in the report;
+  - `skip.in(/some RegExp/, comment)` — browser with `id` which matches `/some RegExp/`
+  and show `comment` in the report;
 
   - `skip.in(['id1', /RegExp1/, ...])` — multiple browsers;
 
@@ -167,15 +168,13 @@ are not available in some browsers yet.
   ]);
   ```
   
-* <s>`skip([browser])`</s> — _deprecated_.
-Works the same way as `skip.in`, except
-to skip all tests you can also write `skip()`.
+* ~`skip([browser])`~ — _deprecated_.
+Works the same way as `skip.in`, except to skip all tests you can also write `skip()`.
   
-* `skip.notIn([browser])` — skip all tests and nested suites for all browsers, except ones in the
-arguments. Accepts same arguments as `skip.in`.
+* `skip.notIn([browser])` — skip all tests and nested suites for all browsers,
+except ones in the arguments. Accepts same arguments as `skip.in`.
   
-To skip test silently, use `only.in` function. This way, skipped browsers wont appear
-in the report.
+To skip test silently, use `only.in` function. This way, skipped browsers will not appear in the report.
   
 * `only.in([browser])` — run all tests and nested suites in specified browsers:
 
@@ -185,13 +184,15 @@ in the report.
 
   - `only.in('id1', /RegExp1/, ...)` — multiple browsers, also accepts an array as argument.
   
-    Throws error if no argument is passed.
- 
-* <s>`browsers([browser])`</s> — _deprecated_. Use
-`only.in` instead.
+* ~`browsers([browser])`~ — _deprecated_. Use `only.in` instead.
   
 * `only.notIn([browser])` — run all tests and nested suites in all browsers, except
 ones in the arguments. Accepts same arguments as `only.in`.
+
+```js
+suite.only.in(['chrome', 'firefox']);
+suite.only.notIn(/ie/, 'opera');
+```
 
 ## Nested suites
 
@@ -203,7 +204,7 @@ browser, even if URL was not changed.
 ```js
 gemini.suite('parent', function(parent) {
     parent.setUrl('/some/path')
-        .setCaptureElements('.selector1', '.selector2');
+        .setCaptureElements('.selector1', '.selector2')
         .capture('state');
 
     gemini.suite('first child', function(child) {
@@ -217,7 +218,7 @@ gemini.suite('parent', function(parent) {
         child.setCaptureElements('.next-selector')
             .capture('third state', function(actions, elements) {
                 // ...
-            })
+            });
 
         gemini.suite('grandchild', function(grandchild) {
             //child suites can have own childs
@@ -229,7 +230,7 @@ gemini.suite('parent', function(parent) {
     gemini.suite('third child', function(child) {
         //this suite uses completely different URL and set of elements
         child.setUrl('/some/another/path')
-            .setCaptureElements('.different-selector');
+            .setCaptureElements('.different-selector')
             .capture('fifth state');
     });
 });

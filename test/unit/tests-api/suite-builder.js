@@ -364,7 +364,7 @@ describe('tests-api/suite-builder', () => {
     });
 
     describe('skip.in', () => {
-        const errorMessage = 'Browsers must be string or RegExp objects';
+        const errorMessage = 'Browsers must be array of strings or RegExp objects';
 
         it('should throw if argument is not a string nor RegExp', () => {
             assert.throws(() => {
@@ -468,7 +468,7 @@ describe('tests-api/suite-builder', () => {
     });
 
     describe('skip.notIn', () => {
-        const errorMessage = 'Browsers must be string or RegExp objects';
+        const errorMessage = 'Browsers must be array of strings or RegExp objects';
 
         it('should throw if argument is not a string nor RegExp', () => {
             assert.throws(() => {
@@ -540,7 +540,7 @@ describe('tests-api/suite-builder', () => {
 
     describe('only.in', () => {
         let rootSuite;
-        const errorMessage = 'Browsers must be string or RegExp objects';
+        const errorMessage = 'Browsers must be array of strings or RegExp objects';
 
         beforeEach(() => {
             rootSuite = Suite.create('');
@@ -664,7 +664,7 @@ describe('tests-api/suite-builder', () => {
 
     describe('only.notIn', () => {
         let rootSuite;
-        const errorMessage = 'Browsers must be string or RegExp objects';
+        const errorMessage = 'Browsers must be array of strings or RegExp objects';
 
         beforeEach(() => {
             rootSuite = Suite.create('');
