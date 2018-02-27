@@ -151,7 +151,7 @@ are not available in some browsers yet.
 
   To skip all tests in suite you can use `skip.in(/.*/)`.
   
-  All browsers from subsequent calls to `.skip.in()` are added to the skip list:
+  All browsers from subsequent calls to `.skip.in` are added to the skip list:
 
   ```js
   suite
@@ -189,6 +189,7 @@ To skip test silently, use `only.in` function. This way, skipped browsers will n
 * `only.notIn([browser])` — run all tests and nested suites in all browsers, except
 ones in the arguments. Accepts same arguments as `only.in`.
 
+For example:
 ```js
 suite.only.in(['chrome', 'firefox']);
 suite.only.notIn(/ie/, 'opera');

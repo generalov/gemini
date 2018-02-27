@@ -19,81 +19,93 @@ describe('tests-api/skip/only-builder', () => {
         sandbox.restore();
     });
 
-    const errorMessage = 'Browsers must be array of strings or RegExp objects';
+    const errorMessage = 'Browsers must be an array with strings and RegExp objects';
+
+    const testShouldThrow = (method) => {
+        return describe('thould throw', () => {
+            it('without an argument', () => {
+                assert.throws(() => {
+                    onlyBuilder[method]();
+                }, TypeError, errorMessage);
+            });
+
+            it('if argument is not a string or RegExp', () => {
+                assert.throws(() => {
+                    onlyBuilder[method](0);
+                }, TypeError, errorMessage);
+            });
+
+            it('if argument is an array of non-strings or non-RegExps', () => {
+                assert.throws(() => {
+                    onlyBuilder[method]([false]);
+                }, TypeError, errorMessage);
+            });
+
+            it('if argument is an object', () => {
+                assert.throws(() => {
+                    onlyBuilder[method]({browserName: 'name', version: '123', id: 'browser'});
+                }, TypeError, errorMessage);
+            });
+
+            it('if argument is an empty array', () => {
+                assert.throws(() => {
+                    onlyBuilder[method]([]);
+                }, TypeError, errorMessage);
+            });
+        });
+    };
 
     describe('in', () => {
-        it('should throw without an argument', () => {
-            assert.throws(() => {
-                onlyBuilder.in();
-            }, TypeError, errorMessage);
-        });
+        testShouldThrow('in');
 
-        it('should throw if an argument is not a string or RegExp', () => {
-            assert.throws(() => {
-                onlyBuilder.in(0);
-            }, TypeError, errorMessage);
-        });
+        describe('should filter suite browsers by', () => {
+            it('a string', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-        it('should throw if argument is an array of non-strings or non-RegExps', () => {
-            assert.throws(() => {
-                onlyBuilder.in([false]);
-            }, TypeError, errorMessage);
-        });
+                onlyBuilder.in('chrome');
 
-        it('should remove all browsers if argument is an empty array', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['chrome']);
+            });
 
-            onlyBuilder.in([]);
+            it('a RegExp', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, []);
-        });
+                onlyBuilder.in(/ie.+/);
 
-        it('should filter suite browsers by a string', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
+            });
 
-            onlyBuilder.in('chrome');
+            it('an array of strings', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
+                onlyBuilder.in(['chrome', 'ie8']);
 
-        it('should filter suite browsers by a RegExp', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie8', 'chrome']);
+            });
 
-            onlyBuilder.in(/ie.+/);
+            it('an array of RegExps', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
+                onlyBuilder.in([/ie.+/]);
 
-        it('should filter suite browsers by an array of strings', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
+            });
 
-            onlyBuilder.in(['chrome', 'ie8']);
+            it('an array of strings and RegExps', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie8', 'chrome']);
-        });
+                onlyBuilder.in([/ie.+/, 'chrome']);
 
-        it('should filter suite browsers by an array of RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
+            });
 
-            onlyBuilder.in([/ie.+/]);
+            it('strings and RegExps', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
+                onlyBuilder.in(/ie.+/, 'chrome');
 
-        it('should filter suite browsers by an array of strings and RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            onlyBuilder.in([/ie.+/, 'chrome']);
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-        });
-
-        it('should filter suite browsers by strings and RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            onlyBuilder.in(/ie.+/, 'chrome');
-
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
+                assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
+            });
         });
 
         it('should not set a browser for a suite if it is not specified in a root one', () => {
@@ -105,7 +117,7 @@ describe('tests-api/skip/only-builder', () => {
         });
 
         it('should be chainable', () => {
-            assert.equal(onlyBuilder.in([]), onlyBuilder);
+            assert.equal(onlyBuilder.in('bro'), onlyBuilder);
         });
 
         it('should filter browsers in all children suites', () => {
@@ -135,70 +147,48 @@ describe('tests-api/skip/only-builder', () => {
     });
 
     describe('notIn', () => {
-        it('should throw without an argument', () => {
-            assert.throws(() => {
-                onlyBuilder.notIn();
-            }, TypeError, errorMessage);
-        });
+        testShouldThrow('notIn');
 
-        it('should throw if an argument is not a string or RegExp', () => {
-            assert.throws(() => {
-                onlyBuilder.notIn(0);
-            }, TypeError, errorMessage);
-        });
+        describe('should filter suite browsers by', () => {
+            it('a string', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-        it('should throw if an argument is an array of non-strings or non-RegExps', () => {
-            assert.throws(() => {
-                onlyBuilder.notIn([false]);
-            }, TypeError, errorMessage);
-        });
+                onlyBuilder.notIn('chrome');
 
-        it('should do nothing if argument is an empty array', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
+            });
 
-            onlyBuilder.notIn([]);
+            it('a RegExp', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9', 'chrome']);
-        });
+                onlyBuilder.notIn(/ie.+/);
 
-        it('should filter suite browsers by a string', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['chrome']);
+            });
 
-            onlyBuilder.notIn('chrome');
+            it('an array of strings', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
-        });
+                onlyBuilder.notIn(['chrome', 'ie8']);
 
-        it('should filter suite browsers by a RegExp', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['ie9']);
+            });
 
-            onlyBuilder.notIn(/ie.+/);
+            it('an array of RegExps', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
+                onlyBuilder.notIn([/ie.+/]);
 
-        it('should filter suite browsers by an array of strings', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                assert.deepEqual(suite.browsers, ['chrome']);
+            });
 
-            onlyBuilder.notIn(['chrome', 'ie8']);
+            it('an array of strings and RegExps', () => {
+                rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
 
-            assert.deepEqual(suite.browsers, ['ie9']);
-        });
+                onlyBuilder.notIn([/ie.+/, 'chrome']);
 
-        it('should filter suite browsers by an array of RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-            onlyBuilder.notIn([/ie.+/]);
-
-            assert.deepEqual(suite.browsers, ['chrome']);
-        });
-
-        it('should filter suite browsers by an array of strings and RegExps', () => {
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
-
-            onlyBuilder.notIn([/ie.+/, 'chrome']);
-
-            assert.deepEqual(suite.browsers, ['opera']);
+                assert.deepEqual(suite.browsers, ['opera']);
+            });
         });
 
         it('should not set a browser for a suite if all browsers are excluded', () => {
@@ -210,7 +200,7 @@ describe('tests-api/skip/only-builder', () => {
         });
 
         it('should be chainable', () => {
-            assert.equal(onlyBuilder.notIn([]), onlyBuilder);
+            assert.equal(onlyBuilder.notIn('bro'), onlyBuilder);
         });
 
         it('should filter browsers in all children suites', () => {
@@ -288,6 +278,7 @@ describe('tests-api/skip/only-builder', () => {
         describe('browsers', () => {
             beforeEach(() => {
                 sandbox.spy(onlyBuilder, 'in');
+                sandbox.spy(onlyBuilder, 'notIn');
             });
 
             it('should call OnlyBuilder\'s .in method', () => {
@@ -300,6 +291,12 @@ describe('tests-api/skip/only-builder', () => {
                 const returnValue = api.browsers('browser1', 'browser2');
 
                 assert.equal(returnValue, suite);
+            });
+
+            it('should skip all browsers if argument is an empty array', () => {
+                api.browsers([]);
+
+                assert.calledWith(onlyBuilder.notIn, /.*/);
             });
         });
     });
