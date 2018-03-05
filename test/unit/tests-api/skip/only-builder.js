@@ -22,7 +22,7 @@ describe('tests-api/skip/only-builder', () => {
     const errorMessage = 'Browsers must be an array with strings and RegExp objects';
 
     const testShouldThrow = (method) => {
-        return describe('thould throw', () => {
+        describe('thould throw', () => {
             it('without an argument', () => {
                 assert.throws(() => {
                     onlyBuilder[method]();
@@ -43,13 +43,7 @@ describe('tests-api/skip/only-builder', () => {
 
             it('if argument is an object', () => {
                 assert.throws(() => {
-                    onlyBuilder[method]({browserName: 'name', version: '123', id: 'browser'});
-                }, TypeError, errorMessage);
-            });
-
-            it('if argument is an empty array', () => {
-                assert.throws(() => {
-                    onlyBuilder[method]([]);
+                    onlyBuilder[method]({browserName: 'chrome'});
                 }, TypeError, errorMessage);
             });
         });
@@ -60,7 +54,7 @@ describe('tests-api/skip/only-builder', () => {
 
         describe('should filter suite browsers by', () => {
             it('a string', () => {
-                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+                rootSuite.browsers = ['ie9', 'chrome'];
 
                 onlyBuilder.in('chrome');
 
@@ -75,20 +69,12 @@ describe('tests-api/skip/only-builder', () => {
                 assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
             });
 
-            it('an array of strings', () => {
+            it('an empty array', () => {
                 rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
 
-                onlyBuilder.in(['chrome', 'ie8']);
+                onlyBuilder.in([]);
 
-                assert.deepEqual(suite.browsers, ['ie8', 'chrome']);
-            });
-
-            it('an array of RegExps', () => {
-                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-                onlyBuilder.in([/ie.+/]);
-
-                assert.deepEqual(suite.browsers, ['ie8', 'ie9']);
+                assert.deepEqual(suite.browsers, []);
             });
 
             it('an array of strings and RegExps', () => {
@@ -126,7 +112,7 @@ describe('tests-api/skip/only-builder', () => {
 
             rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
 
-            onlyBuilder.in([/ie.+/, 'chrome']);
+            new OnlyBuilder(suite).in([/ie.+/, 'chrome']);
             new OnlyBuilder(firstChild).in(/ie.+/);
             new OnlyBuilder(secondChild).in('chrome');
 
@@ -137,12 +123,11 @@ describe('tests-api/skip/only-builder', () => {
 
         it('should pass filtered browsers from a parent suite to a child one', () => {
             const childSuite = Suite.create('child', suite);
+            rootSuite.browsers = ['ie', 'opera', 'chrome'];
 
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
+            new OnlyBuilder(suite).in('ie', 'chrome');
 
-            onlyBuilder.in('chrome');
-
-            assert.deepEqual(childSuite.browsers, ['chrome']);
+            assert.deepEqual(childSuite.browsers, ['ie', 'chrome']);
         });
     });
 
@@ -166,20 +151,12 @@ describe('tests-api/skip/only-builder', () => {
                 assert.deepEqual(suite.browsers, ['chrome']);
             });
 
-            it('an array of strings', () => {
-                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
+            it('an empty array', () => {
+                rootSuite.browsers = ['ie9', 'chrome'];
 
-                onlyBuilder.notIn(['chrome', 'ie8']);
+                onlyBuilder.notIn([]);
 
-                assert.deepEqual(suite.browsers, ['ie9']);
-            });
-
-            it('an array of RegExps', () => {
-                rootSuite.browsers = ['ie8', 'ie9', 'chrome'];
-
-                onlyBuilder.notIn([/ie.+/]);
-
-                assert.deepEqual(suite.browsers, ['chrome']);
+                assert.deepEqual(suite.browsers, ['ie9', 'chrome']);
             });
 
             it('an array of strings and RegExps', () => {
@@ -189,14 +166,6 @@ describe('tests-api/skip/only-builder', () => {
 
                 assert.deepEqual(suite.browsers, ['opera']);
             });
-        });
-
-        it('should not set a browser for a suite if all browsers are excluded', () => {
-            rootSuite.browsers = ['opera'];
-
-            onlyBuilder.notIn('opera');
-
-            assert.deepEqual(suite.browsers, []);
         });
 
         it('should be chainable', () => {
@@ -209,7 +178,7 @@ describe('tests-api/skip/only-builder', () => {
 
             rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
 
-            onlyBuilder.notIn(['opera']);
+            new OnlyBuilder(suite).notIn(['opera']);
             new OnlyBuilder(firstChild).notIn(/ie.+/);
             new OnlyBuilder(secondChild).notIn('chrome');
 
@@ -220,12 +189,11 @@ describe('tests-api/skip/only-builder', () => {
 
         it('should pass filtered browsers from a parent suite to a child one', () => {
             const childSuite = Suite.create('child', suite);
+            rootSuite.browsers = ['opera', 'chrome'];
 
-            rootSuite.browsers = ['ie8', 'ie9', 'opera', 'chrome'];
+            new OnlyBuilder(suite).notIn('chrome');
 
-            onlyBuilder.notIn('chrome');
-
-            assert.deepEqual(childSuite.browsers, ['ie8', 'ie9', 'opera']);
+            assert.deepEqual(childSuite.browsers, ['opera']);
         });
     });
 
@@ -234,13 +202,6 @@ describe('tests-api/skip/only-builder', () => {
 
         beforeEach(() => {
             api = onlyBuilder.buildAPI(suite);
-        });
-
-        it('should return API methods', () => {
-            assert.isObject(api);
-            assert.isFunction(api.browsers);
-            assert.isFunction(api.only.in);
-            assert.isFunction(api.only.notIn);
         });
 
         describe('only.in', () => {
@@ -252,7 +213,7 @@ describe('tests-api/skip/only-builder', () => {
                 assert.calledWith(onlyBuilder.in, 'browser1', 'browser2');
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.only.in('browser1', 'browser2');
 
                 assert.equal(returnValue, suite);
@@ -268,7 +229,7 @@ describe('tests-api/skip/only-builder', () => {
                 assert.calledWith(onlyBuilder.notIn, ['browser1', 'browser2']);
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.only.notIn('browser1', 'browser2');
 
                 assert.equal(returnValue, suite);
@@ -287,16 +248,10 @@ describe('tests-api/skip/only-builder', () => {
                 assert.calledWith(onlyBuilder.in, 'browser1', 'browser2');
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.browsers('browser1', 'browser2');
 
                 assert.equal(returnValue, suite);
-            });
-
-            it('should skip all browsers if argument is an empty array', () => {
-                api.browsers([]);
-
-                assert.calledWith(onlyBuilder.notIn, /.*/);
             });
         });
     });

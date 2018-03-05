@@ -20,7 +20,7 @@ describe('tests-api/skip/skip-builder', () => {
     const errorMessage = 'Browsers must be an array with strings and RegExp objects';
 
     const testShouldThrow = (method) => {
-        return describe('should throw', () => {
+        describe('should throw', () => {
             it('without an argument', () => {
                 assert.throws(() => {
                     skipBuilder[method]();
@@ -44,12 +44,6 @@ describe('tests-api/skip/skip-builder', () => {
                     skipBuilder[method]({browserName: 'name', version: '123', id: 'browser'});
                 }, TypeError, errorMessage);
             });
-
-            it('if argument is an empty array', () => {
-                assert.throws(() => {
-                    skipBuilder[method]([]);
-                }, TypeError, errorMessage);
-            });
         });
     };
 
@@ -60,16 +54,15 @@ describe('tests-api/skip/skip-builder', () => {
             it('browser string id', () => {
                 skipBuilder.in('opera');
 
-                assert.equal(suite.skipped.length, 1);
-                assert.isTrue(suite.skipped[0].matches('opera'));
-                assert.isFalse(suite.skipped[0].matches('firefox'));
+                assert.isTrue(suite.shouldSkip('opera'));
+                assert.isFalse(suite.shouldSkip('firefox'));
             });
 
             it('browser RegExp', () => {
                 skipBuilder.in(/ie1.*/);
 
-                assert.isTrue(suite.skipped[0].matches('ie11'));
-                assert.isFalse(suite.skipped[0].matches('ie8'));
+                assert.isTrue(suite.shouldSkip('ie11'));
+                assert.isFalse(suite.shouldSkip('ie8'));
             });
 
             it('array of string ids and RegExp\'s', () => {
@@ -78,9 +71,15 @@ describe('tests-api/skip/skip-builder', () => {
                     /firefox/
                 ]);
 
-                assert.isTrue(suite.skipped[0].matches('ie11'));
-                assert.isTrue(suite.skipped[0].matches('firefox33'));
-                assert.isFalse(suite.skipped[0].matches('chrome'));
+                assert.isTrue(suite.shouldSkip('ie11'));
+                assert.isTrue(suite.shouldSkip('firefox33'));
+                assert.isFalse(suite.shouldSkip('chrome'));
+            });
+
+            it('empty array', () => {
+                skipBuilder.in([]);
+
+                assert.isFalse(suite.shouldSkip('any_browser'));
             });
 
             it('comments', () => {
@@ -110,15 +109,15 @@ describe('tests-api/skip/skip-builder', () => {
                 skipBuilder.notIn('opera');
 
                 assert.equal(suite.skipped.length, 1);
-                assert.isFalse(suite.skipped[0].matches('opera'));
-                assert.isTrue(suite.skipped[0].matches('firefox'));
+                assert.isFalse(suite.shouldSkip('opera'));
+                assert.isTrue(suite.shouldSkip('firefox'));
             });
 
             it('browser RegExp', () => {
                 skipBuilder.notIn(/ie1.*/);
 
-                assert.isFalse(suite.skipped[0].matches('ie11'));
-                assert.isTrue(suite.skipped[0].matches('ie8'));
+                assert.isFalse(suite.shouldSkip('ie11'));
+                assert.isTrue(suite.shouldSkip('ie8'));
             });
 
             it('array of string ids and RegExp\'s', () => {
@@ -127,9 +126,15 @@ describe('tests-api/skip/skip-builder', () => {
                     /firefox/
                 ]);
 
-                assert.isTrue(suite.skipped[0].matches('chrome'));
-                assert.isFalse(suite.skipped[0].matches('ie11'));
-                assert.isFalse(suite.skipped[0].matches('firefox11'));
+                assert.isTrue(suite.shouldSkip('chrome'));
+                assert.isFalse(suite.shouldSkip('ie11'));
+                assert.isFalse(suite.shouldSkip('firefox33'));
+            });
+
+            it('empty array', () => {
+                skipBuilder.notIn([]);
+
+                assert.isTrue(suite.shouldSkip('any_browser'));
             });
 
             it('comments', () => {
@@ -159,13 +164,6 @@ describe('tests-api/skip/skip-builder', () => {
             api = skipBuilder.buildAPI(suite);
         });
 
-        it('should return API methods', () => {
-            assert.isObject(api);
-            assert.isFunction(api.skip);
-            assert.isFunction(api.skip.in);
-            assert.isFunction(api.skip.notIn);
-        });
-
         describe('skip.in', () => {
             it('should call SkipBuilder\'s .in method', () => {
                 sandbox.spy(skipBuilder, 'in');
@@ -175,7 +173,7 @@ describe('tests-api/skip/skip-builder', () => {
                 assert.calledWith(skipBuilder.in, ['browsers'], 'comment');
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.skip.in(['browsers'], 'comment');
 
                 assert.equal(returnValue, suite);
@@ -191,7 +189,7 @@ describe('tests-api/skip/skip-builder', () => {
                 assert.calledWith(skipBuilder.notIn, ['browsers'], 'comment');
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.skip.notIn(['browsers'], 'comment');
 
                 assert.equal(returnValue, suite);
@@ -209,27 +207,21 @@ describe('tests-api/skip/skip-builder', () => {
                 assert.calledWith(skipBuilder.in, ['browsers'], 'comment');
             });
 
-            it('should return suite', () => {
+            it('should return suite instance', () => {
                 const returnValue = api.skip(['browsers'], 'comment');
 
                 assert.equal(returnValue, suite);
             });
 
-            it('should skip all if no argument', () => {
+            it('should skip all browsers if no argument', () => {
                 api.skip();
 
                 assert.calledWith(skipBuilder.in, /.*/);
             });
 
-            it('should skip nothing if argument is an empty array', () => {
-                api.skip([]);
-
-                assert.notCalled(skipBuilder.in);
-            });
-
             describe('falsey values', () => {
                 const skipAllTest = (arg, argDescription = arg) => {
-                    return it(`should skip all if argument is ${argDescription}`, () => {
+                    return it(`should skip all browsers if argument is ${argDescription}`, () => {
                         api.skip(arg);
 
                         assert.calledWith(skipBuilder.in, /.*/);
