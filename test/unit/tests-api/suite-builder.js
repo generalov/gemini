@@ -380,11 +380,11 @@ describe('tests-api/suite-builder', () => {
             suiteBuilder = new SuiteBuilder(suite);
         });
 
-        it('should call SkipBuilder\'s .buildAPI method', () => {
+        it(`should call SkipBuilder's .buildAPI method`, () => {
             assert.calledOnce(skipBuilder.buildAPI);
         });
 
-        it('should extend SkipBuilder API\'s methods', () => {
+        it(`should extend SkipBuilder API's methods`, () => {
             const api = skipBuilder.buildAPI.returnValues[0];
 
             assert.equal(suiteBuilder.skip, api.skip);
@@ -414,11 +414,11 @@ describe('tests-api/suite-builder', () => {
             suiteBuilder = new SuiteBuilder(suite);
         });
 
-        it('should call OnlyBuilder\'s .buildAPI method', () => {
+        it(`should call OnlyBuilder's .buildAPI method`, () => {
             assert.calledOnce(onlyBuilder.buildAPI);
         });
 
-        it('should extend OnlyBuilder API\'s methods', () => {
+        it(`should extend OnlyBuilder API's methods`, () => {
             const api = onlyBuilder.buildAPI.returnValues[0];
 
             assert.equal(suiteBuilder.browsers, api.browsers);

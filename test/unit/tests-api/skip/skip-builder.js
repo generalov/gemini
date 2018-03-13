@@ -65,7 +65,7 @@ describe('tests-api/skip/skip-builder', () => {
                 assert.isFalse(suite.shouldSkip('ie8'));
             });
 
-            it('array of string ids and RegExp\'s', () => {
+            it(`array of string ids and RegExp's`, () => {
                 skipBuilder.in([
                     'ie11',
                     /firefox/
@@ -120,7 +120,7 @@ describe('tests-api/skip/skip-builder', () => {
                 assert.isTrue(suite.shouldSkip('ie8'));
             });
 
-            it('array of string ids and RegExp\'s', () => {
+            it(`array of string ids and RegExp's`, () => {
                 skipBuilder.notIn([
                     'ie11',
                     /firefox/
@@ -165,7 +165,7 @@ describe('tests-api/skip/skip-builder', () => {
         });
 
         describe('skip.in', () => {
-            it('should call SkipBuilder\'s .in method', () => {
+            it(`should call SkipBuilder's .in method`, () => {
                 sandbox.spy(skipBuilder, 'in');
 
                 api.skip.in(['browsers'], 'comment');
@@ -181,7 +181,7 @@ describe('tests-api/skip/skip-builder', () => {
         });
 
         describe('skip.notIn', () => {
-            it('should call SkipBuilder\'s .notIn method', () => {
+            it(`should call SkipBuilder's .notIn method`, () => {
                 sandbox.spy(skipBuilder, 'notIn');
 
                 api.skip.notIn(['browsers'], 'comment');
@@ -201,7 +201,7 @@ describe('tests-api/skip/skip-builder', () => {
                 sandbox.spy(skipBuilder, 'in');
             });
 
-            it('should call SkipBuilder\'s .in method', () => {
+            it(`should call SkipBuilder's .in method`, () => {
                 api.skip(['browsers'], 'comment');
 
                 assert.calledWith(skipBuilder.in, ['browsers'], 'comment');

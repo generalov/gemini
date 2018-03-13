@@ -205,7 +205,7 @@ describe('tests-api/skip/only-builder', () => {
         });
 
         describe('only.in', () => {
-            it('should call OnlyBuilder\'s .in method', () => {
+            it(`should call OnlyBuilder's .in method`, () => {
                 sandbox.spy(onlyBuilder, 'in');
 
                 api.only.in('browser1', 'browser2');
@@ -221,7 +221,7 @@ describe('tests-api/skip/only-builder', () => {
         });
 
         describe('only.notIn', () => {
-            it('should call OnlyBuilder\'s .notIn method', () => {
+            it(`should call OnlyBuilder's .notIn method`, () => {
                 sandbox.spy(onlyBuilder, 'notIn');
 
                 api.only.notIn(['browser1', 'browser2']);
@@ -242,7 +242,7 @@ describe('tests-api/skip/only-builder', () => {
                 sandbox.spy(onlyBuilder, 'notIn');
             });
 
-            it('should call OnlyBuilder\'s .in method', () => {
+            it(`should call OnlyBuilder's .in method`, () => {
                 api.browsers('browser1', 'browser2');
 
                 assert.calledWith(onlyBuilder.in, 'browser1', 'browser2');
